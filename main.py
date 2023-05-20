@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import logging
+import os.path
 import re
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests_cache
 from bs4 import BeautifulSoup
@@ -16,22 +19,12 @@ def whats_new(session):
     whats_new_url = urljoin(MAIN_DOC_URL, "whatsnew/")
     response = get_response(session, whats_new_url)
     if response is None:
-        # Если основная страница не загрузится, программа закончит работу.
         return
 
-    # Создание "супа".
     soup = BeautifulSoup(response.text, features="lxml")
 
-    # Шаг 1-й: поиск в "супе" тега section с нужным id. Парсеру нужен только
-    # первый элемент, поэтому используется метод find().
     main_div = find_tag(soup, "section", attrs={"id": "what-s-new-in-python"})
-
-    # Шаг 2-й: поиск внутри main_div следующего тега div с классом toctree-wrapper.
-    # Здесь тоже нужен только первый элемент, используется метод find().
     div_with_ul = find_tag(main_div, "div", attrs={"class": "toctree-wrapper"})
-
-    # Шаг 3-й: поиск внутри div_with_ul всех элементов списка li с классом toctree-l1.
-    # Нужны все теги, поэтому используется метод find_all().
     sections_by_python = div_with_ul.find_all("li", attrs={"class": "toctree-l1"})
 
     results = [("Ссылка на статью", "Заголовок", "Редактор, автор")]
@@ -41,14 +34,15 @@ def whats_new(session):
         version_link = urljoin(whats_new_url, href)
         response = get_response(session, version_link)
         if response is None:
-            # Если страница не загрузится, программа перейдёт к следующей ссылке.
             continue
         soup = BeautifulSoup(response.text, features="lxml")
         h1 = find_tag(soup, "h1")
+        # ord(h1.text[-1:])
+        # print([(x, ord(x)) for x in h1.text[-3:]])
+        h1_text = h1.text.replace(chr(182), "")
         dl = find_tag(soup, "dl")
         dl_text = dl.text.replace("\n", " ")
-        # На печать теперь выводится переменная dl_text — без пустых строчек.
-        results.append((version_link, h1.text, dl_text))
+        results.append((version_link, h1_text, dl_text))
 
     return results
 
@@ -107,7 +101,12 @@ def download(session):
     pdf_a4_link = pdf_a4_tag["href"]
     archive_url = urljoin(downloads_url, pdf_a4_link)
 
-    filename = archive_url.split("/")[-1]
+    # filename = archive_url.split("/")[-1]
+
+    parsed_url = urlparse(archive_url)
+    url_path = parsed_url.path
+    _, filename = os.path.split(url_path)
+
     downloads_dir = BASE_DIR / "downloads"
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename

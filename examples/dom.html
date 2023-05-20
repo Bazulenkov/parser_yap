@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .alert {
+            padding: 15px;
+            border: 1px solid #c6cee9;
+            border-radius: 4px;
+            color: green;
+            background-color: #dff0d8;
+        }
+    </style>
+    <title>SuperDoc</title>
+</head>
+<body>
+<h1>Супер документ!</h1>
+<ol id="ol">
+    <li>Глава 1</li>
+    <li>Глава 2</li>
+    <!--комментарий-->
+    <li>Последняя глава</li>
+</ol>
+
+<div class="alert">
+    <strong>Всем привет!</strong> Вы прочитали важный документ.
+</div>
+
+<script>
+    document.body.style.background = "#fff666";
+    setTimeout(() => document.body.style.background = '', 3000);
+
+    let ol = document.getElementById('ol');
+
+    let liLast = document.createElement('li');
+    liLast.innerHTML = 'Заключение';
+    ol.append(liLast);  // вставить liLast в конец <ol>
+</script>
+</body>
+</html>
